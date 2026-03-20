@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>전염병 확산 모의 실험실 | 생명과학</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            scroll-behavior: smooth;
+        }
+        
+        .hero-pattern {
+            background-color: #0f172a;
+            background-image: radial-gradient(#334155 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .history-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .history-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+
+        .dark body {
+            background-color: #0f172a;
+        }
+
+        .dark canvas {
+            background-color: #020617;
+        }
+
+        canvas {
+            background-color: #1e293b;
+            border-radius: 0.75rem;
+            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+        }
+
+        /* Custom Range Slider Styling */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+            margin-top: -8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 6px;
+            cursor: pointer;
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        input[type=range]:focus {
+            outline: none;
+        }
+        input[type=range]:focus::-webkit-slider-runnable-track {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="text-slate-800 dark:text-slate-200 bg-slate-50 dark:bg-slate-900 transition-colors duration-300">
+
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm border-b border-slate-200 dark:border-slate-800 shadow-sm transition-colors duration-300">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="microscope" class="text-blue-600 dark:text-blue-400 w-6 h-6"></i>
+                    <span class="font-bold text-xl tracking-tight text-slate-900 dark:text-white">생명과학 탐구실</span>
+                </div>
+                <div class="hidden md:flex space-x-6 text-sm font-medium items-center">
+                    <a href="#intro" class="text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">수업 소개</a>
+                    <a href="#history" class="text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">역사 속 전염병</a>
+                    <a href="#simulation" class="text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">확산 모의 실험</a>
+                    <a href="#public-health" class="text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">공중보건</a>
+                    <!-- Theme Toggle Button -->
+                    <button id="theme-toggle" class="ml-2 p-2 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors text-slate-600 dark:text-slate-300" aria-label="Toggle Dark Mode">
+                        <i data-lucide="moon" class="w-4 h-4 dark:hidden"></i>
+                        <i data-lucide="sun" class="w-4 h-4 hidden dark:block"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="intro" class="hero-pattern pt-32 pb-20 lg:pt-48 lg:pb-32 text-center px-4 relative overflow-hidden">
+        <!-- Background decorative elements -->
+        <div class="absolute top-20 left-10 text-slate-700 opacity-20 animate-pulse"><i data-lucide="virus" class="w-24 h-24"></i></div>
+        <div class="absolute bottom-20 right-10 text-slate-700 opacity-20 animate-bounce" style="animation-duration: 4s;"><i data-lucide="virus" class="w-16 h-16"></i></div>
+        
+        <div class="max-w-3xl mx-auto relative z-10">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 font-medium text-sm mb-6 border border-blue-500/30">
+                <i data-lucide="flask-conical" class="w-4 h-4"></i> 중학교 2학년 생명과학
+            </div>
+            <h1 class="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-6 leading-tight">
+                보이지 않는 위협,<br>
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">전염병 확산</span>을 막아라!
+            </h1>
+            <p class="text-lg md:text-xl text-slate-300 mb-10 font-light">
+                역사 속 실제 사례를 통해 전염병의 위험성을 알아보고,<br class="hidden md:block">
+                모의 실험을 통해 우리의 행동(공중보건)이 확산에 미치는 영향을 직접 확인해 봅시다.
+            </p>
+            <div class="flex flex-col sm:flex-row justify-center gap-4">
+                <a href="#simulation" class="px-8 py-3 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-bold transition-colors shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2">
+                    간단 모의 실험 <i data-lucide="arrow-down" class="w-5 h-5"></i>
+                </a>
+                <a href="./01/index.html" class="px-8 py-3 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition-colors shadow-lg shadow-emerald-500/30 flex items-center justify-center gap-2">
+                    전염병 모의 실험 <i data-lucide="external-link" class="w-5 h-5"></i>
+                </a>
+                <a href="#history" class="px-8 py-3 rounded-full bg-slate-800 dark:bg-slate-700 hover:bg-slate-700 dark:hover:bg-slate-600 text-white font-bold transition-colors border border-slate-600 flex items-center justify-center gap-2">
+                    역사 알아보기 <i data-lucide="book-open" class="w-5 h-5"></i>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- History Section -->
+    <section id="history" class="py-20 bg-white dark:bg-slate-900 transition-colors duration-300">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl font-bold text-slate-900 dark:text-white mb-4">인류 역사 속 전염병과 공중보건</h2>
+                <div class="w-16 h-1 bg-blue-600 dark:bg-blue-500 mx-auto rounded-full mb-6"></div>
+                <p class="text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">
+                    과거의 사람들은 전염병에 어떻게 대처했을까요? 치명적인 질병들이 인류 역사에 남긴 상처와, 이를 극복하기 위한 '공중보건'의 발달 과정을 살펴봅니다.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- History Card 1 -->
+                <div class="history-card bg-slate-50 dark:bg-slate-800 rounded-2xl p-8 border border-slate-200 dark:border-slate-700 relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 w-24 h-24 bg-red-100 dark:bg-red-900/30 rounded-bl-full -z-0 transition-transform group-hover:scale-110"></div>
+                    <div class="relative z-10">
+                        <div class="w-12 h-12 bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400 rounded-xl flex items-center justify-center mb-6 shadow-sm">
+                            <i data-lucide="skull" class="w-6 h-6"></i>
+                        </div>
+                        <span class="text-sm font-bold text-red-600 dark:text-red-400 mb-1 block">14세기 (1347~1351)</span>
+                        <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-3">흑사병 (페스트)</h3>
+                        <p class="text-slate-600 dark:text-slate-300 text-sm leading-relaxed mb-4">
+                            쥐벼룩에 의해 전파되어 유럽 인구의 약 1/3의 목숨을 앗아간 끔찍한 전염병입니다. 당시에는 질병의 원인을 몰라 대처에 어려움을 겪었습니다.
+                        </p>
+                        <div class="bg-white dark:bg-slate-700 p-3 rounded-lg border border-slate-200 dark:border-slate-600 text-sm">
+                            <strong class="text-slate-800 dark:text-slate-100 block mb-1"><i data-lucide="shield-check" class="w-4 h-4 inline text-emerald-500 dark:text-emerald-400 mb-1"></i> 방역의 시작: '격리(Quarantine)'</strong>
+                            베네치아에서 감염 의심 선박을 40일간 정박시킨 것이 현대 격리 제도의 시초가 되었습니다.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- History Card 2 -->
+                <div class="history-card bg-slate-50 dark:bg-slate-800 rounded-2xl p-8 border border-slate-200 dark:border-slate-700 relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 w-24 h-24 bg-orange-100 dark:bg-orange-900/30 rounded-bl-full -z-0 transition-transform group-hover:scale-110"></div>
+                    <div class="relative z-10">
+                        <div class="w-12 h-12 bg-orange-100 dark:bg-orange-900/50 text-orange-600 dark:text-orange-400 rounded-xl flex items-center justify-center mb-6 shadow-sm">
+                            <i data-lucide="globe-2" class="w-6 h-6"></i>
+                        </div>
+                        <span class="text-sm font-bold text-orange-600 dark:text-orange-400 mb-1 block">1918~1919년</span>
+                        <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-3">스페인 독감</h3>
+                        <p class="text-slate-600 dark:text-slate-300 text-sm leading-relaxed mb-4">
+                            제1차 세계대전 중에 발생하여 전 세계적으로 5,000만 명 이상의 사망자를 낸 인플루엔자 바이러스입니다. 교통의 발달로 전 세계로 빠르게 확산되었습니다.
+                        </p>
+                        <div class="bg-white dark:bg-slate-700 p-3 rounded-lg border border-slate-200 dark:border-slate-600 text-sm">
+                            <strong class="text-slate-800 dark:text-slate-100 block mb-1"><i data-lucide="shield-check" class="w-4 h-4 inline text-emerald-500 dark:text-emerald-400 mb-1"></i> 사회적 조치의 중요성</strong>
+                            마스크 착용, 학교 휴교, 대규모 모임 금지 등 비약물적 중재(NPI) 조치가 사망률을 낮추는 데 효과적임을 증명했습니다.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- History Card 3 -->
+                <div class="history-card bg-slate-50 dark:bg-slate-800 rounded-2xl p-8 border border-slate-200 dark:border-slate-700 relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 w-24 h-24 bg-blue-100 dark:bg-blue-900/30 rounded-bl-full -z-0 transition-transform group-hover:scale-110"></div>
+                    <div class="relative z-10">
+                        <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center mb-6 shadow-sm">
+                            <i data-lucide="shield-alert" class="w-6 h-6"></i>
+                        </div>
+                        <span class="text-sm font-bold text-blue-600 dark:text-blue-400 mb-1 block">2019년 ~ 현재</span>
+                        <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-3">코로나바이러스감염증-19</h3>
+                        <p class="text-slate-600 dark:text-slate-300 text-sm leading-relaxed mb-4">
+                            호흡기 비말을 통해 전파되는 새로운 바이러스로, 현대 사회의 밀집된 환경 속에서 팬데믹(세계적 대유행)을 일으켰습니다.
+                        </p>
+                        <div class="bg-white dark:bg-slate-700 p-3 rounded-lg border border-slate-200 dark:border-slate-600 text-sm">
+                            <strong class="text-slate-800 dark:text-slate-100 block mb-1"><i data-lucide="shield-check" class="w-4 h-4 inline text-emerald-500 dark:text-emerald-400 mb-1"></i> 현대 공중보건의 집약</strong>
+                            백신의 초고속 개발, 대규모 진단 검사, 역학 조사, 사회적 거리두기 등 과학과 시민의식이 결합된 방역 체계를 보여줍니다.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Simulation Section -->
+    <section id="simulation" class="py-20 bg-slate-100 dark:bg-slate-950 border-y border-slate-200 dark:border-slate-800 transition-colors duration-300">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row justify-between items-end mb-10 gap-4">
+                <div>
+                    <span class="inline-block py-1 px-3 rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 text-sm font-bold mb-3 tracking-wide">핵심 탐구 활동</span>
+                    <h2 class="text-3xl font-bold text-slate-900 dark:text-white mb-2">전염병 확산 시뮬레이션</h2>
+                    <p class="text-slate-600 dark:text-slate-300 max-w-2xl">
+                        오른쪽 슬라이더를 조절하여 조건을 바꾸고 실험을 시작해보세요. <br>
+                        감염 확률, 사회적 거리두기, <strong class="dark:text-white">사망률</strong>이 결과에 어떤 영향을 미칠까요?
+                    </p>
+                </div>
+                <!-- 섹션 내에도 별도 연결 버튼 추가 -->
+                <a href="./01/index.html" class="px-5 py-2.5 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-800/60 font-bold transition-colors flex items-center justify-center gap-2 border border-emerald-300 dark:border-emerald-700">
+                    심화 전염병 모의 실험 열기 <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </a>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 transition-colors duration-300">
+                
+                <!-- Canvas Area -->
+                <div class="lg:col-span-2 relative">
+                    <canvas id="simCanvas" class="w-full h-[450px] md:h-[550px]"></canvas>
+                    
+                    <!-- Simulation Status Overlay -->
+                    <div class="absolute top-4 left-4 bg-white/95 dark:bg-slate-800/95 backdrop-blur p-3 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 text-sm font-medium transition-colors duration-300">
+                        <div class="flex items-center gap-2 mb-1 dark:text-slate-200">
+                            <div class="w-3 h-3 rounded-full bg-blue-400"></div> 미감염자: <span id="count-susceptible">0</span>명
+                        </div>
+                        <div class="flex items-center gap-2 mb-1 dark:text-slate-200">
+                            <div class="w-3 h-3 rounded-full bg-red-500"></div> 감염자: <span id="count-infected">0</span>명
+                        </div>
+                        <div class="flex items-center gap-2 mb-1 dark:text-slate-200">
+                            <div class="w-3 h-3 rounded-full bg-slate-400"></div> 완치자(면역): <span id="count-recovered">0</span>명
+                        </div>
+                        <div class="flex items-center gap-2 dark:text-slate-200">
+                            <div class="w-3 h-3 rounded-full bg-slate-900 dark:bg-slate-100 flex items-center justify-center">
+                                <i data-lucide="x" class="w-2 h-2 text-white dark:text-slate-900"></i>
+                            </div> 
+                            사망자: <span id="count-dead" class="text-slate-900 dark:text-slate-100 font-bold">0</span>명
+                        </div>
+                    </div>
+                    
+                    <!-- Graph Canvas Overlay (Bar) -->
+                    <div class="absolute bottom-4 left-4 right-4 h-4 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden flex shadow-inner">
+                        <div id="bar-susceptible" class="h-full bg-blue-400 transition-all duration-300" style="width: 25%"></div>
+                        <div id="bar-infected" class="h-full bg-red-500 transition-all duration-300" style="width: 25%"></div>
+                        <div id="bar-recovered" class="h-full bg-slate-400 transition-all duration-300" style="width: 25%"></div>
+                        <div id="bar-dead" class="h-full bg-slate-900 dark:bg-slate-100 transition-all duration-300" style="width: 25%"></div>
+                    </div>
+                </div>
+
+                <!-- Controls Area -->
+                <div class="flex flex-col gap-5 bg-slate-50 dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 overflow-y-auto transition-colors duration-300">
+                    <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2 border-b border-slate-200 dark:border-slate-700 pb-3">
+                        <i data-lucide="sliders-horizontal" class="w-5 h-5"></i> 실험 변인 설정
+                    </h3>
+
+                    <!-- Population -->
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <label class="text-sm font-bold text-slate-700 dark:text-slate-300">총 인구 수</label>
+                            <span id="val-population" class="text-sm text-blue-600 dark:text-blue-400 font-bold">150명</span>
+                        </div>
+                        <input type="range" id="slider-population" min="50" max="300" step="10" value="150">
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">공간 안에 있는 사람의 수입니다.</p>
+                    </div>
+
+                    <!-- Infection Rate -->
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <label class="text-sm font-bold text-slate-700 dark:text-slate-300">감염 확률</label>
+                            <span id="val-infection" class="text-sm text-red-600 dark:text-red-400 font-bold">50%</span>
+                        </div>
+                        <input type="range" id="slider-infection" min="10" max="100" step="10" value="50">
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">접촉 시 바이러스가 옮을 확률입니다.</p>
+                    </div>
+
+                    <!-- Social Distancing -->
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <label class="text-sm font-bold text-slate-700 dark:text-slate-300">사회적 거리두기 참여율</label>
+                            <span id="val-distancing" class="text-sm text-emerald-600 dark:text-emerald-400 font-bold">20%</span>
+                        </div>
+                        <input type="range" id="slider-distancing" min="0" max="90" step="10" value="20">
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">이동하지 않고 자리에 머무는 사람의 비율입니다.</p>
+                    </div>
+
+                    <!-- Mortality Rate -->
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <label class="text-sm font-bold text-slate-700 dark:text-slate-300">사망률 (치명률)</label>
+                            <span id="val-mortality" class="text-sm text-slate-900 dark:text-white font-bold">5%</span>
+                        </div>
+                        <input type="range" id="slider-mortality" min="0" max="100" step="1" value="5">
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">감염자가 완치되지 못하고 사망할 확률입니다.</p>
+                    </div>
+
+                    <div class="mt-auto flex gap-2 pt-4 border-t border-slate-200 dark:border-slate-700">
+                        <button id="btn-reset" class="flex-1 py-3 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 font-bold rounded-lg hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors flex items-center justify-center gap-2">
+                            <i data-lucide="rotate-ccw" class="w-4 h-4"></i> 초기화
+                        </button>
+                        <button id="btn-start" class="flex-1 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors shadow-md flex items-center justify-center gap-2">
+                            <i data-lucide="play" class="w-4 h-4"></i> 시작
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Public Health Section -->
+    <section id="public-health" class="py-20 bg-white dark:bg-slate-900 transition-colors duration-300">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="bg-emerald-50 dark:bg-emerald-900/20 rounded-3xl p-8 md:p-12 border border-emerald-100 dark:border-emerald-800/50 shadow-sm relative overflow-hidden transition-colors duration-300">
+                <div class="absolute -right-10 -top-10 text-emerald-200 dark:text-emerald-800/40 opacity-50"><i data-lucide="shield-plus" class="w-48 h-48"></i></div>
+                
+                <div class="relative z-10">
+                    <h2 class="text-3xl font-bold text-emerald-900 dark:text-emerald-400 mb-6 flex items-center gap-3">
+                        <i data-lucide="heart-pulse" class="w-8 h-8 text-emerald-500"></i>
+                        우리가 만드는 안전한 세상, 공중보건
+                    </h2>
+                    <p class="text-lg text-emerald-800 dark:text-emerald-300 mb-8 font-medium">
+                        모의 실험에서 확인했듯이, 단 한 명의 행동 변화도 전염병 확산 속도를 크게 늦출 수 있습니다. 우리가 일상에서 실천할 수 있는 공중보건 수칙을 확인해 볼까요?
+                    </p>
+
+                    <div class="space-y-4">
+                        <label class="flex items-start gap-4 p-4 bg-white dark:bg-slate-800 rounded-xl border border-emerald-200 dark:border-emerald-700/50 cursor-pointer hover:bg-emerald-50 dark:hover:bg-slate-700 transition-colors shadow-sm">
+                            <input type="checkbox" class="w-6 h-6 mt-1 rounded text-emerald-600 dark:text-emerald-500 focus:ring-emerald-500 dark:focus:ring-emerald-400 cursor-pointer accent-emerald-600 dark:accent-emerald-500">
+                            <div>
+                                <h4 class="font-bold text-slate-900 dark:text-white text-lg">올바른 손 씻기 생활화</h4>
+                                <p class="text-slate-600 dark:text-slate-300 text-sm mt-1">비누를 사용하여 30초 이상 흐르는 물에 꼼꼼하게 씻습니다. 바이러스의 세포막을 파괴하는 가장 확실한 물리적/화학적 방법입니다.</p>
+                            </div>
+                        </label>
+                        <label class="flex items-start gap-4 p-4 bg-white dark:bg-slate-800 rounded-xl border border-emerald-200 dark:border-emerald-700/50 cursor-pointer hover:bg-emerald-50 dark:hover:bg-slate-700 transition-colors shadow-sm">
+                            <input type="checkbox" class="w-6 h-6 mt-1 rounded text-emerald-600 dark:text-emerald-500 focus:ring-emerald-500 dark:focus:ring-emerald-400 cursor-pointer accent-emerald-600 dark:accent-emerald-500">
+                            <div>
+                                <h4 class="font-bold text-slate-900 dark:text-white text-lg">상황에 맞는 마스크 착용</h4>
+                                <p class="text-slate-600 dark:text-slate-300 text-sm mt-1">호흡기 전염병의 경우, 감염자의 비말(침방울)이 공기 중으로 퍼지는 것을 막고, 건강한 사람이 비말을 흡입하는 것을 막아주는 1차 방어선입니다.</p>
+                            </div>
+                        </label>
+                        <label class="flex items-start gap-4 p-4 bg-white dark:bg-slate-800 rounded-xl border border-emerald-200 dark:border-emerald-700/50 cursor-pointer hover:bg-emerald-50 dark:hover:bg-slate-700 transition-colors shadow-sm">
+                            <input type="checkbox" class="w-6 h-6 mt-1 rounded text-emerald-600 dark:text-emerald-500 focus:ring-emerald-500 dark:focus:ring-emerald-400 cursor-pointer accent-emerald-600 dark:accent-emerald-500">
+                            <div>
+                                <h4 class="font-bold text-slate-900 dark:text-white text-lg">예방접종(백신) 참여</h4>
+                                <p class="text-slate-600 dark:text-slate-300 text-sm mt-1">우리 몸의 면역 체계에 바이러스의 정보를 미리 알려주어, 실제 바이러스가 침입했을 때 신속하게 방어(집단 면역)할 수 있도록 돕습니다.</p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-400 py-10 text-center text-sm">
+        <p>본 페이지는 중학교 생명과학 수업을 위한 교육용 모의 실험 자료입니다.</p>
+        <p class="mt-2">&copy; 2026 생명과학 교실. All rights reserved.</p>
+    </footer>
+
+    <!-- Application Logic (Simulation) -->
+    <script>
+        // Theme Toggle Logic
+        // DOMContentLoaded를 사용하여 요소가 모두 로드된 후 스크립트 실행되도록 안전하게 보호
+        document.addEventListener('DOMContentLoaded', () => {
+            const themeToggleBtn = document.getElementById('theme-toggle');
+            const html = document.documentElement;
+            
+            // Load preference from localStorage or system settings
+            if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                html.classList.add('dark');
+            } else {
+                html.classList.remove('dark');
+            }
+
+            if (themeToggleBtn) {
+                themeToggleBtn.addEventListener('click', () => {
+                    html.classList.toggle('dark');
+                    if (html.classList.contains('dark')) {
+                        localStorage.theme = 'dark';
+                    } else {
+                        localStorage.theme = 'light';
+                    }
+                });
+            }
+
+            // Initialize Lucide Icons
+            lucide.createIcons();
+
+            // ----------------------------------------------------
+            // SIRD Epidemic Simulation Logic (Susceptible, Infected, Recovered, Dead)
+            // ----------------------------------------------------
+            const canvas = document.getElementById('simCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            function resizeCanvas() {
+                const rect = canvas.getBoundingClientRect();
+                canvas.width = rect.width;
+                canvas.height = rect.height;
+            }
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
+
+            // UI Elements
+            const sliderPop = document.getElementById('slider-population');
+            const sliderInf = document.getElementById('slider-infection');
+            const sliderDist = document.getElementById('slider-distancing');
+            const sliderMort = document.getElementById('slider-mortality'); 
+            
+            const valPop = document.getElementById('val-population');
+            const valInf = document.getElementById('val-infection');
+            const valDist = document.getElementById('val-distancing');
+            const valMort = document.getElementById('val-mortality'); 
+
+            const btnStart = document.getElementById('btn-start');
+            const btnReset = document.getElementById('btn-reset');
+
+            const countS = document.getElementById('count-susceptible');
+            const countI = document.getElementById('count-infected');
+            const countR = document.getElementById('count-recovered');
+            const countD = document.getElementById('count-dead'); 
+
+            const barS = document.getElementById('bar-susceptible');
+            const barI = document.getElementById('bar-infected');
+            const barR = document.getElementById('bar-recovered');
+            const barD = document.getElementById('bar-dead'); 
+
+            // Simulation Parameters
+            let particles = [];
+            let isRunning = false;
+            let animationId;
+
+            const STATE_SUSCEPTIBLE = 'S'; 
+            const STATE_INFECTED = 'I';    
+            const STATE_RECOVERED = 'R';   
+            const STATE_DEAD = 'D';        
+
+            const PARTICLE_RADIUS = 5;
+            const BASE_SPEED = 2;
+            const RECOVERY_TIME_FRAMES = 300; 
+
+            // Update UI Labels on slider change
+            sliderPop.addEventListener('input', (e) => valPop.innerText = `${e.target.value}명`);
+            sliderInf.addEventListener('input', (e) => valInf.innerText = `${e.target.value}%`);
+            sliderDist.addEventListener('input', (e) => valDist.innerText = `${e.target.value}%`);
+            sliderMort.addEventListener('input', (e) => valMort.innerText = `${e.target.value}%`);
+
+            class Particle {
+                constructor(x, y, isDistancing) {
+                    this.x = x;
+                    this.y = y;
+                    this.radius = PARTICLE_RADIUS;
+                    this.state = STATE_SUSCEPTIBLE;
+                    this.infectedTime = 0;
+                    
+                    if (isDistancing) {
+                        this.vx = 0;
+                        this.vy = 0;
+                    } else {
+                        const angle = Math.random() * Math.PI * 2;
+                        this.vx = Math.cos(angle) * BASE_SPEED;
+                        this.vy = Math.sin(angle) * BASE_SPEED;
+                    }
+                }
+
+                move() {
+                    if (this.state === STATE_DEAD) return;
+
+                    this.x += this.vx;
+                    this.y += this.vy;
+
+                    if (this.x - this.radius < 0) {
+                        this.x = this.radius;
+                        this.vx *= -1;
+                    } else if (this.x + this.radius > canvas.width) {
+                        this.x = canvas.width - this.radius;
+                        this.vx *= -1;
+                    }
+
+                    if (this.y - this.radius < 0) {
+                        this.y = this.radius;
+                        this.vy *= -1;
+                    } else if (this.y + this.radius > canvas.height) {
+                        this.y = canvas.height - this.radius;
+                        this.vy *= -1;
+                    }
+
+                    if (this.state === STATE_INFECTED) {
+                        this.infectedTime++;
+                        if (this.infectedTime > RECOVERY_TIME_FRAMES) {
+                            const mortalityRate = parseInt(sliderMort.value) / 100;
+                            
+                            if (Math.random() < mortalityRate) {
+                                this.state = STATE_DEAD;
+                                this.vx = 0; 
+                                this.vy = 0;
+                            } else {
+                                this.state = STATE_RECOVERED;
+                            }
+                        }
+                    }
+                }
+
+                draw(ctx) {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                    
+                    if (this.state === STATE_SUSCEPTIBLE) {
+                        ctx.fillStyle = '#60a5fa'; 
+                        ctx.fill();
+                    } else if (this.state === STATE_INFECTED) {
+                        const pulse = Math.sin(this.infectedTime * 0.1) * 2;
+                        ctx.arc(this.x, this.y, this.radius + pulse, 0, Math.PI * 2);
+                        ctx.fillStyle = '#ef4444'; 
+                        ctx.fill();
+                        
+                        ctx.beginPath();
+                        ctx.arc(this.x, this.y, this.radius * 2.5, 0, Math.PI * 2);
+                        ctx.fillStyle = 'rgba(239, 68, 68, 0.1)';
+                        ctx.fill();
+                    } else if (this.state === STATE_RECOVERED) {
+                        ctx.fillStyle = '#94a3b8'; 
+                        ctx.fill();
+                    } else if (this.state === STATE_DEAD) {
+                        const isDark = document.documentElement.classList.contains('dark');
+                        ctx.fillStyle = isDark ? '#f1f5f9' : '#0f172a'; 
+                        ctx.fill();
+                        
+                        ctx.beginPath();
+                        ctx.strokeStyle = isDark ? '#0f172a' : '#ffffff';
+                        ctx.lineWidth = 1;
+                        const s = 2; 
+                        ctx.moveTo(this.x - s, this.y - s);
+                        ctx.lineTo(this.x + s, this.y + s);
+                        ctx.moveTo(this.x + s, this.y - s);
+                        ctx.lineTo(this.x - s, this.y + s);
+                        ctx.stroke();
+                    }
+                    
+                    ctx.closePath();
+                }
+            }
+
+            function initSimulation() {
+                cancelAnimationFrame(animationId);
+                particles = [];
+                
+                const popSize = parseInt(sliderPop.value);
+                const distRate = parseInt(sliderDist.value) / 100;
+
+                for (let i = 0; i < popSize; i++) {
+                    const x = Math.random() * (canvas.width - PARTICLE_RADIUS * 2) + PARTICLE_RADIUS;
+                    const y = Math.random() * (canvas.height - PARTICLE_RADIUS * 2) + PARTICLE_RADIUS;
+                    
+                    const isDistancing = Math.random() < distRate;
+                    const p = new Particle(x, y, isDistancing);
+                    
+                    if (i === 0) {
+                        p.state = STATE_INFECTED;
+                        p.vx = (Math.random() > 0.5 ? 1 : -1) * BASE_SPEED;
+                        p.vy = (Math.random() > 0.5 ? 1 : -1) * BASE_SPEED;
+                    }
+                    
+                    particles.push(p);
+                }
+
+                updateStats();
+                draw();
+                isRunning = false;
+                btnStart.innerHTML = '<i data-lucide="play" class="w-4 h-4"></i> 시작';
+                lucide.createIcons();
+            }
+
+            function detectCollisions() {
+                const infRate = parseInt(sliderInf.value) / 100;
+
+                for (let i = 0; i < particles.length; i++) {
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const p1 = particles[i];
+                        const p2 = particles[j];
+
+                        if (p1.state === STATE_DEAD && p2.state === STATE_DEAD) continue;
+
+                        const dx = p1.x - p2.x;
+                        const dy = p1.y - p2.y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+
+                        if (dist < PARTICLE_RADIUS * 2.5) { 
+                            if (p1.state !== STATE_DEAD && p2.state !== STATE_DEAD) {
+                                if (p1.state === STATE_INFECTED && p2.state === STATE_SUSCEPTIBLE) {
+                                    if (Math.random() < infRate) p2.state = STATE_INFECTED;
+                                } else if (p2.state === STATE_INFECTED && p1.state === STATE_SUSCEPTIBLE) {
+                                    if (Math.random() < infRate) p1.state = STATE_INFECTED;
+                                }
+                            }
+
+                            if(dist < PARTICLE_RADIUS * 2) {
+                                if (p1.state === STATE_DEAD && (p2.vx !== 0 || p2.vy !== 0)) {
+                                    p2.vx *= -1;
+                                    p2.vy *= -1;
+                                    p2.x += (p2.vx > 0 ? 1 : -1);
+                                } else if (p2.state === STATE_DEAD && (p1.vx !== 0 || p1.vy !== 0)) {
+                                    p1.vx *= -1;
+                                    p1.vy *= -1;
+                                    p1.x += (p1.vx > 0 ? 1 : -1);
+                                } 
+                                else if (p1.vx !== 0 || p1.vy !== 0 || p2.vx !== 0 || p2.vy !== 0) {
+                                    const tempVx = p1.vx;
+                                    const tempVy = p1.vy;
+                                    
+                                    if(p1.vx !== 0 || p1.vy !==0) { p1.vx = p2.vx; p1.vy = p2.vy; }
+                                    if(p2.vx !== 0 || p2.vy !==0) { p2.vx = tempVx; p2.vy = tempVy; }
+                                    
+                                    if(p1.vx !== 0) p1.x += (p1.vx > 0 ? 1 : -1);
+                                    if(p2.vx !== 0) p2.x += (p2.vx > 0 ? 1 : -1);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            function updateStats() {
+                let s = 0, i = 0, r = 0, d = 0;
+                for (const p of particles) {
+                    if (p.state === STATE_SUSCEPTIBLE) s++;
+                    else if (p.state === STATE_INFECTED) i++;
+                    else if (p.state === STATE_RECOVERED) r++;
+                    else if (p.state === STATE_DEAD) d++;
+                }
+                
+                const total = particles.length;
+                
+                countS.innerText = s;
+                countI.innerText = i;
+                countR.innerText = r;
+                countD.innerText = d;
+
+                if(total > 0) {
+                    barS.style.width = `${(s/total)*100}%`;
+                    barI.style.width = `${(i/total)*100}%`;
+                    barR.style.width = `${(r/total)*100}%`;
+                    barD.style.width = `${(d/total)*100}%`;
+                }
+
+                if (i === 0 && isRunning) {
+                    isRunning = false;
+                    btnStart.innerHTML = '<i data-lucide="play" class="w-4 h-4"></i> 재시작';
+                    lucide.createIcons();
+                }
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                for (const p of particles) {
+                    p.draw(ctx);
+                }
+            }
+
+            function loop() {
+                if (!isRunning) return;
+                
+                for (const p of particles) {
+                    p.move();
+                }
+                detectCollisions();
+                updateStats();
+                draw();
+                
+                animationId = requestAnimationFrame(loop);
+            }
+
+            // Event Listeners
+            btnStart.addEventListener('click', () => {
+                if (!isRunning) {
+                    const infectedCount = particles.filter(p => p.state === STATE_INFECTED).length;
+                    if (infectedCount === 0) {
+                        initSimulation();
+                    }
+                    isRunning = true;
+                    btnStart.innerHTML = '<i data-lucide="pause" class="w-4 h-4"></i> 일시정지';
+                    btnStart.classList.replace('bg-blue-600', 'bg-amber-500');
+                    btnStart.classList.replace('hover:bg-blue-700', 'hover:bg-amber-600');
+                    lucide.createIcons();
+                    loop();
+                } else {
+                    isRunning = false;
+                    btnStart.innerHTML = '<i data-lucide="play" class="w-4 h-4"></i> 계속';
+                    btnStart.classList.replace('bg-amber-500', 'bg-blue-600');
+                    btnStart.classList.replace('hover:bg-amber-600', 'hover:bg-blue-700');
+                    lucide.createIcons();
+                }
+            });
+
+            btnReset.addEventListener('click', () => {
+                initSimulation();
+                btnStart.classList.remove('bg-amber-500', 'hover:bg-amber-600');
+                btnStart.classList.add('bg-blue-600', 'hover:bg-blue-700');
+            });
+
+            initSimulation();
+        });
+    </script>
+</body>
+</html>
