@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>전염병 확산 모의실험 | 일일 역학조사관</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f0fdf4;
+            color: #1f2937;
+        }
+        .step-hidden {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        .step-visible {
+            display: block;
+            opacity: 1;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .person-dot {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: inline-block;
+            transition: background-color 0.5s ease;
+        }
+        .uninfected { background-color: #d1d5db; }
+        .infected { background-color: #ec4899; box-shadow: 0 0 10px #ec4899; }
+    </style>
+</head>
+<body class="min-h-screen pb-20">
+
+    <!-- Header -->
+    <header class="bg-teal-600 text-white shadow-md sticky top-0 z-50">
+        <div class="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <h1 class="text-2xl font-black tracking-tight"><i class="fas fa-microscope mr-2"></i>전염병 모의 활동</h1>
+                <span class="text-teal-100 font-medium hidden sm:inline border-l border-teal-400 pl-3">중학교 2학년 과학 수업</span>
+            </div>
+            <!-- Home Button -->
+            <a href="../index.html" class="bg-teal-700 hover:bg-teal-800 text-white px-4 py-2 rounded-lg font-bold transition-colors flex items-center shadow-sm">
+                <i class="fas fa-home mr-2"></i> 홈
+            </a>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-4 mt-8 space-y-8">
+
+        <!-- Section 1: Storytelling / Mission -->
+        <section class="bg-white rounded-2xl shadow-lg p-6 md:p-10 border-t-8 border-teal-500">
+            <div class="flex items-start gap-4">
+                <div class="bg-red-100 text-red-600 p-3 rounded-full shrink-0">
+                    <i class="fas fa-exclamation-triangle text-2xl"></i>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-bold mb-2">상황 발생: 원인 불명의 전염병 출몰!</h2>
+                    <p class="text-gray-700 leading-relaxed">
+                        즐거운 학교생활을 보내던 우리 학교. 그런데 어느 날부터 하나둘 기침을 하고 열이 나는 친구들이 생기기 시작했습니다.<br>
+                        아픈 친구들의 빈자리는 점차 늘고, 학교생활이 위협받고 있습니다!<br>
+                        여러분은 소중한 친구들을 지키기 위해 오늘 <strong>'일일 역학조사관'</strong>이 되어 질병의 확산을 막고 <strong>최초 감염자(보균자)</strong>를 찾아내야 합니다.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: Infographic Button -->
+        <section class="bg-white rounded-2xl shadow-lg p-6 md:p-10 border-t-8 border-indigo-500 text-center">
+            <h2 class="text-2xl font-bold mb-4 flex items-center justify-center">
+                <i class="fas fa-map-marked-alt text-indigo-500 mr-2"></i> 작전 브리핑: 모의 역학 조사 요약도
+            </h2>
+            <p class="text-gray-600 mb-6">오늘 진행할 역학 조사 활동의 전체 과정을 한눈에 확인해보세요. 안전 수칙부터 최종 결과 분석까지 우리가 해야 할 임무입니다.</p>
+            
+            <button id="btn-open-infographic" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-transform transform hover:-translate-y-1 flex items-center mx-auto">
+                <i class="fas fa-image mr-2"></i> 인포그래픽 보기
+            </button>
+        </section>
+
+        <!-- Section 2: Safety Checklist -->
+        <section class="bg-white rounded-2xl shadow-lg p-6 md:p-10">
+            <h2 class="text-2xl font-bold mb-4 flex items-center">
+                <i class="fas fa-clipboard-check text-teal-500 mr-2"></i> 1단계: 실험 안전 수칙 확인
+            </h2>
+            <p class="text-gray-600 mb-6">역학조사를 시작하기 전, 안전 수칙을 모두 숙지하고 체크해주세요. (모두 체크해야 다음 단계가 열립니다)</p>
+            
+            <div class="space-y-3" id="safety-checklist">
+                <label class="flex items-center p-4 bg-gray-50 rounded-xl cursor-pointer hover:bg-teal-50 transition-colors border border-gray-100">
+                    <input type="checkbox" class="safety-chk w-6 h-6 text-teal-600 rounded focus:ring-teal-500">
+                    <span class="ml-3 text-lg font-medium">선생님의 지시 없이 책상 위의 실험 도구를 만지지 않습니다.</span>
+                </label>
+                <label class="flex items-center p-4 bg-gray-50 rounded-xl cursor-pointer hover:bg-teal-50 transition-colors border border-gray-100">
+                    <input type="checkbox" class="safety-chk w-6 h-6 text-teal-600 rounded focus:ring-teal-500">
+                    <span class="ml-3 text-lg font-medium">실험복, 실험 장갑, 보안경을 착용하고, 긴 머리는 단정하게 묶습니다.</span>
+                </label>
+                <label class="flex items-center p-4 bg-gray-50 rounded-xl cursor-pointer hover:bg-teal-50 transition-colors border border-gray-100">
+                    <input type="checkbox" class="safety-chk w-6 h-6 text-teal-600 rounded focus:ring-teal-500">
+                    <span class="ml-3 text-lg font-medium">용액이 피부에 묻지 않게 주의하며, 묻었을 경우 즉시 물로 씻고 선생님께 알립니다.</span>
+                </label>
+                <label class="flex items-center p-4 bg-gray-50 rounded-xl cursor-pointer hover:bg-teal-50 transition-colors border border-gray-100">
+                    <input type="checkbox" class="safety-chk w-6 h-6 text-teal-600 rounded focus:ring-teal-500">
+                    <span class="ml-3 text-lg font-medium">지시약(페놀레드)은 옷에 묻으면 염색 자국이 남으므로 특히 주의합니다.</span>
+                </label>
+            </div>
+            
+            <div class="mt-6 text-center">
+                <button id="unlock-btn" disabled class="bg-gray-400 text-white font-bold py-3 px-8 rounded-full shadow-md transition-all duration-300 cursor-not-allowed">
+                    안전 수칙을 모두 확인해주세요
+                </button>
+            </div>
+        </section>
+
+        <!-- Section 3: Experiment Steps (Hidden by default) -->
+        <section id="experiment-section" class="step-hidden bg-white rounded-2xl shadow-lg p-6 md:p-10 border-t-8 border-blue-500">
+            <h2 class="text-2xl font-bold mb-6 flex items-center">
+                <i class="fas fa-flask text-blue-500 mr-2"></i> 2단계: 모의 활동 진행 방법
+            </h2>
+
+            <div class="flex flex-col md:flex-row gap-6">
+                <!-- Steps Navigation -->
+                <div class="w-full md:w-1/3 flex flex-col gap-2">
+                    <button onclick="showStep(1)" id="btn-step-1" class="step-btn active bg-blue-100 text-blue-800 font-bold py-3 px-4 rounded-xl text-left border-l-4 border-blue-600 transition-colors">1. 실험 준비 및 기준점</button>
+                    <button onclick="showStep(2)" id="btn-step-2" class="step-btn bg-gray-100 text-gray-600 font-bold py-3 px-4 rounded-xl text-left border-l-4 border-transparent hover:bg-gray-200 transition-colors">2. 1차 체액 교환</button>
+                    <button onclick="showStep(3)" id="btn-step-3" class="step-btn bg-gray-100 text-gray-600 font-bold py-3 px-4 rounded-xl text-left border-l-4 border-transparent hover:bg-gray-200 transition-colors">3. 2차 & 3차 교환</button>
+                    <button onclick="showStep(4)" id="btn-step-4" class="step-btn bg-gray-100 text-gray-600 font-bold py-3 px-4 rounded-xl text-left border-l-4 border-transparent hover:bg-gray-200 transition-colors">4. 감염 결과 확인</button>
+                </div>
+
+                <!-- Step Contents -->
+                <div class="w-full md:w-2/3 bg-blue-50 p-6 rounded-xl border border-blue-100 h-full">
+                    
+                    <div id="step-1" class="step-content">
+                        <div class="text-center mb-4 text-4xl text-blue-500"><i class="fas fa-vials"></i></div>
+                        <h3 class="text-xl font-bold mb-2 text-blue-800">실험 준비 및 기준점 설정</h3>
+                        <p class="text-gray-700 leading-relaxed mb-4">
+                            1. 학생 1명당 학습지, 스포이트 1개, 투명한 액체(사람의 체액을 의미)가 담긴 유리병 1개를 받습니다.<br><br>
+                            2. <strong>교환 전 상태 보존:</strong> 스포이트를 사용하여 자신의 유리병 속 액체 <strong>5방울</strong>을 24-웰 플레이트의 <strong>#0 라인</strong> 자기 번호에 떨어뜨립니다.<br>
+                            <span class="text-sm text-gray-500">* 남은 액체는 다시 유리병에 넣습니다.</span>
+                        </p>
+                    </div>
+
+                    <div id="step-2" class="step-content hidden">
+                        <div class="text-center mb-4 text-4xl text-blue-500"><i class="fas fa-people-arrows"></i></div>
+                        <h3 class="text-xl font-bold mb-2 text-blue-800">1차 체액 교환</h3>
+                        <p class="text-gray-700 leading-relaxed mb-4">
+                            1. 선생님의 지시에 따라 액체를 교환할 파트너를 선택합니다. (아래 4단계 역학조사 기록장에 이름/번호 기록!)<br><br>
+                            2. 자신의 유리병 액체를 스포이트로 빨아들여 <strong>파트너의 유리병에 5방울</strong> 떨어뜨립니다. (서로 교환)<br><br>
+                            3. 뚜껑을 꼭 닫고 여러 번 흔들어 잘 섞어줍니다.<br><br>
+                            4. <strong>1차 기록:</strong> 섞인 액체 <strong>5방울</strong>을 웰 플레이트의 <strong>#1 라인</strong> 자기 번호에 떨어뜨립니다.
+                        </p>
+                    </div>
+
+                    <div id="step-3" class="step-content hidden">
+                        <div class="text-center mb-4 text-4xl text-blue-500"><i class="fas fa-sync-alt"></i></div>
+                        <h3 class="text-xl font-bold mb-2 text-blue-800">2차 & 3차 교환</h3>
+                        <p class="text-gray-700 leading-relaxed mb-4">
+                            1. <strong>2차 교환:</strong> 이전과 다른 새로운 파트너를 찾아 동일한 방법으로 액체를 교환하고 섞습니다. 이후 웰 플레이트 <strong>#2 라인</strong>에 5방울 떨어뜨립니다.<br><br>
+                            2. <strong>3차 교환:</strong> 또 다른 새로운 파트너를 찾아 동일하게 진행하고, 웰 플레이트 <strong>#3 라인</strong>에 5방울을 떨어뜨립니다.<br><br>
+                            <span class="text-red-500 font-bold">* 주의: 매 교환마다 반드시 서로 다른 파트너를 만나야 합니다! (같은 조원 금지)</span>
+                        </p>
+                    </div>
+
+                    <div id="step-4" class="step-content hidden">
+                        <div class="text-center mb-4 text-4xl text-pink-500"><i class="fas fa-search"></i></div>
+                        <h3 class="text-xl font-bold mb-2 text-pink-800">감염 결과 확인 및 추적</h3>
+                        <p class="text-gray-700 leading-relaxed mb-4">
+                            1. 3차례 교환이 모두 끝나면, 감염 여부를 확인하기 위해 <strong>지시약(페놀레드) 1방울</strong>을 각자의 유리병에 떨어뜨립니다.<br><br>
+                            <span class="inline-block bg-pink-100 text-pink-800 px-3 py-1 rounded-full font-bold mb-1">분홍색 = 감염 양성 (병원체 있음)</span><br>
+                            <span class="inline-block bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full font-bold mb-4">노란색 = 감염 음성 (안전함)</span><br>
+                            2. 학급 전체의 양성 환자를 파악하고, 역학조사 기록을 역추적하여 <strong>최초 감염자 1명</strong>을 논리적으로 찾아냅니다!
+                        </p>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Interactive Simulation (Exponential Growth) -->
+        <section class="bg-white rounded-2xl shadow-lg p-6 md:p-10 border-t-8 border-pink-500">
+            <h2 class="text-2xl font-bold mb-2 flex items-center">
+                <i class="fas fa-chart-line text-pink-500 mr-2"></i> 3단계: 미니 시뮬레이션 (기하급수적 확산)
+            </h2>
+            <p class="text-gray-600 mb-6">최초 감염자 단 1명에서 시작된 전염병이 교환 횟수에 따라 어떻게 퍼지는지 확인해 보세요. (총 학생수 30명 가정)</p>
+
+            <div class="bg-gray-50 p-6 rounded-xl text-center">
+                <div class="flex justify-between items-center mb-6 max-w-sm mx-auto">
+                    <div class="text-center">
+                        <div class="text-sm text-gray-500">교환 횟수</div>
+                        <div class="text-3xl font-black text-gray-800" id="sim-round">0</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-sm text-gray-500">감염자 수</div>
+                        <div class="text-3xl font-black text-pink-600" id="sim-infected">1</div>
+                    </div>
+                </div>
+
+                <!-- Simulation Dots -->
+                <div id="dots-container" class="flex flex-wrap justify-center gap-2 mb-8 max-w-lg mx-auto">
+                    <!-- Dots will be generated by JS -->
+                </div>
+
+                <div class="flex justify-center gap-4">
+                    <button id="btn-next-round" class="bg-pink-500 hover:bg-pink-600 text-white font-bold py-3 px-6 rounded-lg transition-colors shadow-md flex items-center">
+                        <i class="fas fa-step-forward mr-2"></i> 다음 교환 진행
+                    </button>
+                    <button id="btn-reset-sim" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-3 px-6 rounded-lg transition-colors shadow-md">
+                        <i class="fas fa-redo mr-2"></i> 초기화
+                    </button>
+                </div>
+                <p id="sim-message" class="mt-4 text-pink-600 font-bold h-6"></p>
+            </div>
+        </section>
+
+        <!-- Section 5: Epidemiology Record Book -->
+        <section class="bg-white rounded-2xl shadow-lg p-6 md:p-10 border-t-8 border-yellow-500">
+            <h2 class="text-2xl font-bold mb-4 flex items-center">
+                <i class="fas fa-clipboard-list text-yellow-500 mr-2"></i> 4단계: 역학조사 기록장 (내 교환 일지)
+            </h2>
+            <p class="text-gray-600 mb-6">실험을 진행하며 만난 파트너의 이름과 유리병 번호를 꼼꼼히 기록하세요. 이 기록들을 종합하여 학급 전체의 확산 경로를 파악할 수 있습니다.</p>
+
+            <div class="bg-yellow-50 p-6 rounded-xl border border-yellow-100">
+                <div class="mb-6 max-w-sm">
+                    <label class="block text-sm font-bold text-gray-700 mb-2">나의 유리병 번호</label>
+                    <input type="number" placeholder="자신의 번호를 입력하세요" class="w-full px-4 py-3 rounded-lg border border-yellow-300 focus:outline-none focus:ring-2 focus:ring-yellow-500 bg-white">
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- 1차 교환 파트너 -->
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-yellow-200">
+                        <h4 class="font-bold text-yellow-800 mb-4 border-b-2 border-yellow-100 pb-2 flex items-center">
+                            <i class="fas fa-handshake mr-2"></i> 1차 교환
+                        </h4>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">파트너 이름</label>
+                                <input type="text" placeholder="이름 기록" class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-yellow-500 focus:border-yellow-500 bg-gray-50 focus:bg-white transition-colors">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">파트너 유리병 번호</label>
+                                <input type="number" placeholder="번호 기록" class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-yellow-500 focus:border-yellow-500 bg-gray-50 focus:bg-white transition-colors">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2차 교환 파트너 -->
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-yellow-200">
+                        <h4 class="font-bold text-yellow-800 mb-4 border-b-2 border-yellow-100 pb-2 flex items-center">
+                            <i class="fas fa-handshake mr-2"></i> 2차 교환
+                        </h4>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">파트너 이름</label>
+                                <input type="text" placeholder="이름 기록" class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-yellow-500 focus:border-yellow-500 bg-gray-50 focus:bg-white transition-colors">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">파트너 유리병 번호</label>
+                                <input type="number" placeholder="번호 기록" class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-yellow-500 focus:border-yellow-500 bg-gray-50 focus:bg-white transition-colors">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3차 교환 파트너 -->
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-yellow-200">
+                        <h4 class="font-bold text-yellow-800 mb-4 border-b-2 border-yellow-100 pb-2 flex items-center">
+                            <i class="fas fa-handshake mr-2"></i> 3차 교환
+                        </h4>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">파트너 이름</label>
+                                <input type="text" placeholder="이름 기록" class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-yellow-500 focus:border-yellow-500 bg-gray-50 focus:bg-white transition-colors">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">파트너 유리병 번호</label>
+                                <input type="number" placeholder="번호 기록" class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-yellow-500 focus:border-yellow-500 bg-gray-50 focus:bg-white transition-colors">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 6: Final Diagnosis (Report Patient Zero) -->
+        <section class="bg-white rounded-2xl shadow-lg p-6 md:p-10 border-t-8 border-purple-500">
+            <h2 class="text-2xl font-bold mb-4 flex items-center">
+                <i class="fas fa-user-md text-purple-500 mr-2"></i> 5단계: 최종 진단 보고
+            </h2>
+            <p class="text-gray-600 mb-6">위의 역학조사 기록과 지시약 결과(양성/음성)를 바탕으로, 병원균을 학급에 처음 퍼뜨린 최초 감염자를 추리해보고 최종 제출하세요.</p>
+            
+            <div class="bg-purple-50 p-6 rounded-xl border border-purple-100 max-w-2xl mx-auto">
+                <form id="diagnosis-form" class="space-y-4">
+                    <div>
+                        <label for="suspect-name" class="block text-sm font-bold text-gray-700 mb-1">최초 감염자(학우) 이름</label>
+                        <input type="text" id="suspect-name" required placeholder="예: 김광무" class="w-full px-4 py-3 rounded-lg border border-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-shadow bg-white">
+                    </div>
+                    <div>
+                        <label for="suspect-number" class="block text-sm font-bold text-gray-700 mb-1">해당 학우의 유리병 번호</label>
+                        <input type="number" id="suspect-number" required placeholder="예: 15" class="w-full px-4 py-3 rounded-lg border border-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-shadow bg-white">
+                    </div>
+                    <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition-colors shadow-md mt-4 flex justify-center items-center">
+                        <i class="fas fa-file-medical-alt mr-2"></i> 진단 결과 제출하기
+                    </button>
+                </form>
+                
+                <!-- Success Message -->
+                <div id="diagnosis-result" class="hidden mt-6 p-4 bg-green-100 border border-green-300 text-green-800 rounded-lg font-bold text-center shadow-inner">
+                    <i class="fas fa-check-circle mr-2 text-2xl align-middle"></i>
+                    <div class="mt-2 text-lg">역학조사 최종 보고서가 제출되었습니다!</div>
+                    <span class="text-sm font-medium mt-2 inline-block text-green-700">과연 여러분의 추리가 맞았을까요? 선생님과 함께 칠판의 교환 기록도를 그려보며 정답을 확인해보세요. 🩺</span>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Infographic Popup Modal -->
+    <div id="infographic-modal" class="fixed inset-0 z-[100] hidden bg-black/80 flex justify-center items-center p-4 backdrop-blur-sm transition-opacity duration-300">
+        <div class="relative w-full max-w-5xl flex flex-col items-center justify-center">
+            <!-- Close Button -->
+            <button id="btn-close-modal" class="absolute -top-12 right-0 text-white hover:text-gray-300 text-4xl p-2 focus:outline-none transition-colors">
+                &times;
+            </button>
+            <!-- Image (Ensure 01.jpg is in the same directory) -->
+            <img src="01.jpg" alt="전염병 확산 방지 모의 역학 조사 요약도" class="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl border-4 border-gray-700" onerror="this.onerror=null; this.src='https://via.placeholder.com/1200x800.png?text=01.jpg+%EC%9D%B4%EB%AF%B8%EC%A7%80%EB%A5%BC+%EC%B6%94%EA%B0%80%ED%95%B4%EC%A3%BC%EC%84%B8%EC%9A%94';">
+        </div>
+    </div>
+
+    <script>
+        // 0. Modal Logic
+        const infoModal = document.getElementById('infographic-modal');
+        const btnOpenModal = document.getElementById('btn-open-infographic');
+        const btnCloseModal = document.getElementById('btn-close-modal');
+
+        btnOpenModal.addEventListener('click', () => {
+            infoModal.classList.remove('hidden');
+        });
+
+        btnCloseModal.addEventListener('click', () => {
+            infoModal.classList.add('hidden');
+        });
+
+        // Close when clicking outside the image
+        infoModal.addEventListener('click', (e) => {
+            if (e.target === infoModal) {
+                infoModal.classList.add('hidden');
+            }
+        });
+
+        // 1. Safety Checklist Logic
+        const safetyCheckboxes = document.querySelectorAll('.safety-chk');
+        const unlockBtn = document.getElementById('unlock-btn');
+        const experimentSection = document.getElementById('experiment-section');
+
+        safetyCheckboxes.forEach(chk => {
+            chk.addEventListener('change', checkSafety);
+        });
+
+        function checkSafety() {
+            const allChecked = Array.from(safetyCheckboxes).every(chk => chk.checked);
+            if (allChecked) {
+                unlockBtn.disabled = false;
+                unlockBtn.classList.remove('bg-gray-400', 'cursor-not-allowed');
+                unlockBtn.classList.add('bg-teal-500', 'hover:bg-teal-600', 'cursor-pointer');
+                unlockBtn.innerText = "안전 수칙 확인 완료! 실험 시작하기";
+            } else {
+                unlockBtn.disabled = true;
+                unlockBtn.classList.add('bg-gray-400', 'cursor-not-allowed');
+                unlockBtn.classList.remove('bg-teal-500', 'hover:bg-teal-600', 'cursor-pointer');
+                unlockBtn.innerText = "안전 수칙을 모두 확인해주세요";
+            }
+        }
+
+        unlockBtn.addEventListener('click', () => {
+            if(!unlockBtn.disabled) {
+                experimentSection.classList.remove('step-hidden');
+                experimentSection.classList.add('step-visible');
+                experimentSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+
+        // 2. Experiment Steps Logic
+        function showStep(stepNum) {
+            document.querySelectorAll('.step-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            document.querySelectorAll('.step-btn').forEach(btn => {
+                btn.classList.remove('bg-blue-100', 'text-blue-800', 'border-blue-600');
+                btn.classList.add('bg-gray-100', 'text-gray-600', 'border-transparent');
+            });
+
+            document.getElementById(`step-${stepNum}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`btn-step-${stepNum}`);
+            activeBtn.classList.remove('bg-gray-100', 'text-gray-600', 'border-transparent');
+            activeBtn.classList.add('bg-blue-100', 'text-blue-800', 'border-blue-600');
+        }
+
+        // 3. Mini Simulation Logic (Exponential Growth)
+        const totalStudents = 30;
+        let simRound = 0;
+        let simInfected = 1;
+        const container = document.getElementById('dots-container');
+        const roundTxt = document.getElementById('sim-round');
+        const infectedTxt = document.getElementById('sim-infected');
+        const simMessage = document.getElementById('sim-message');
+
+        function initSimulation() {
+            container.innerHTML = '';
+            simRound = 0;
+            simInfected = 1;
+            updateSimUI();
+
+            for (let i = 0; i < totalStudents; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'person-dot uninfected';
+                dot.id = `dot-${i}`;
+                container.appendChild(dot);
+            }
+            
+            setTimeout(() => {
+                document.getElementById('dot-0').classList.replace('uninfected', 'infected');
+            }, 100);
+            
+            simMessage.innerText = "";
+            document.getElementById('btn-next-round').disabled = false;
+            document.getElementById('btn-next-round').classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+
+        function nextRound() {
+            if (simRound >= 3) return;
+            
+            simRound++;
+            let newInfections = simInfected; 
+            const uninfectedDots = Array.from(document.querySelectorAll('.uninfected'));
+            
+            for(let i=0; i<newInfections; i++) {
+                if (uninfectedDots.length > 0) {
+                    const randomIndex = Math.floor(Math.random() * uninfectedDots.length);
+                    const targetDot = uninfectedDots.splice(randomIndex, 1)[0];
+                    targetDot.classList.replace('uninfected', 'infected');
+                    simInfected++;
+                }
+            }
+            
+            updateSimUI();
+
+            if (simRound === 3) {
+                simMessage.innerText = "3차 교환 종료! 초기 감염자 1명에서 순식간에 8명으로 늘어났습니다!";
+                document.getElementById('btn-next-round').disabled = true;
+                document.getElementById('btn-next-round').classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                simMessage.innerText = `기하급수적 증가! (1명이 2명으로, 2명이 4명으로...)`;
+            }
+        }
+
+        function updateSimUI() {
+            roundTxt.innerText = simRound;
+            infectedTxt.innerText = simInfected;
+        }
+
+        document.getElementById('btn-next-round').addEventListener('click', nextRound);
+        document.getElementById('btn-reset-sim').addEventListener('click', initSimulation);
+
+        window.onload = initSimulation;
+
+        // 5. Final Diagnosis Form Logic
+        document.getElementById('diagnosis-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('suspect-name').value;
+            const number = document.getElementById('suspect-number').value;
+
+            if(name && number) {
+                const resultDiv = document.getElementById('diagnosis-result');
+                resultDiv.classList.remove('hidden');
+                
+                document.getElementById('suspect-name').disabled = true;
+                document.getElementById('suspect-number').disabled = true;
+                this.querySelector('button[type="submit"]').disabled = true;
+                this.querySelector('button[type="submit"]').classList.add('opacity-50', 'cursor-not-allowed');
+                this.querySelector('button[type="submit"]').innerHTML = '<i class="fas fa-check mr-2"></i> 제출 완료';
+            }
+        });
+
+    </script>
+</body>
+</html>
